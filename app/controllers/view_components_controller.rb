@@ -96,7 +96,8 @@ class ViewComponentsController < ActionController::Base # :nodoc:
 
   def require_local!
     unless local_request?
-      render html: "<p>For security purposes, this information is only available to local requests.</p>".html_safe, status: :forbidden
+      render html: "<p>For security purposes, this information is only available to local requests.</p>".html_safe,
+             status: :forbidden
     end
   end
 
