@@ -2,12 +2,14 @@
 
 require "rails/application_controller"
 
-class ViewComponentsController < Rails::ApplicationController # :nodoc:
+class ViewComponentsController < ActionController::Base # :nodoc:
   prepend_view_path File.expand_path("../views", __dir__)
+  layout "application"
 
   around_action :set_locale, only: :previews
   before_action :find_preview, only: :previews
   before_action :require_local!, unless: :show_previews?
+  before_action :disable_content_security_policy_nonce!
 
   if respond_to?(:content_security_policy)
     content_security_policy(false)
@@ -90,5 +92,19 @@ class ViewComponentsController < Rails::ApplicationController # :nodoc:
 
   def prepend_preview_examples_view_path
     prepend_view_path(ViewComponent::Base.preview_paths)
+  end
+
+  def require_local!
+    unless local_request?
+      render html: "<p>For security purposes, this information is only available to local requests.</p>".html_safe, status: :forbidden
+    end
+  end
+
+  def local_request?
+    Rails.application.config.consider_all_requests_local || request.local?
+  end
+
+  def disable_content_security_policy_nonce!
+    request.content_security_policy_nonce_generator = nil
   end
 end
